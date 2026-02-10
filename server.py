@@ -1,3 +1,5 @@
+import json
+
 from fastmcp import FastMCP
 
 mcp = FastMCP(
@@ -21,16 +23,16 @@ def multiply(a: float, b: float) -> float:
 
 # Resources
 @mcp.resource("data://config")
-def get_config() -> dict:
+def get_config() -> str:
     """Provides the application configuration."""
-    return {"theme": "dark", "version": "1.0"}
+    return json.dumps({"theme": "dark", "version": "1.0"})
 
 
 # Resource Templates
 @mcp.resource("users://{user_id}/profile")
-def get_user_profile(user_id: int) -> dict:
+def get_user_profile(user_id: int) -> str:
     """Retrieves a user's profile by ID."""
-    return {"id": user_id, "name": f"User {user_id}", "status": "active"}
+    return json.dumps({"id": user_id, "name": f"User {user_id}", "status": "active"})
 
 
 # Prompts
