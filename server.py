@@ -1,6 +1,6 @@
-import json
-
 from fastmcp import FastMCP
+from fastmcp.prompts import Message, PromptResult
+from fastmcp.resources import ResourceContent, ResourceResult
 
 mcp = FastMCP(
     name = "HK FastMCP",
@@ -11,36 +11,40 @@ mcp = FastMCP(
 )
 
 # Tools
-@mcp.tool(output_schema=None)
-def greet(name: str) -> str:
-    return f"Namaskar, {name}!"
+@mcp.tool()
+def greet(name: str) -> dict:
+    return { "greeting": f"Namaskar, {name}!" }
 
-@mcp.tool(output_schema=None)
-def multiply(a: float, b: float) -> float:
+@mcp.tool()
+def multiply(a: float, b: float) -> dict:
     """Multiplies two numbers together."""
-    return a * b
-
+    return { "a": a, "b": b, "product": a * b }
 
 # Resources
 @mcp.resource("data://config")
-def get_config() -> str:
+def get_config() -> ResourceResult:
     """Provides the application configuration."""
-    return json.dumps({"theme": "dark", "version": "1.0"})
+    return ResourceResult([ResourceContent({"theme": "dark", "version": "1.0"})])
 
 
 # Resource Templates
 @mcp.resource("users://{user_id}/profile")
-def get_user_profile(user_id: int) -> str:
+def get_user_profile(user_id: int) -> ResourceResult:
     """Retrieves a user's profile by ID."""
-    return json.dumps({"id": user_id, "name": f"User {user_id}", "status": "active"})
+    return ResourceResult([ResourceContent({"id": user_id, "name": f"User {user_id}", "status": "active"})])
 
 
 # Prompts
 @mcp.prompt
-def analyze_data(data_points: list[float]) -> str:
+def analyze_data(data_points: list[float]) -> PromptResult:
     """Creates a prompt asking for analysis of numerical data."""
     formatted_data = ", ".join(str(point) for point in data_points)
-    return f"Please analyze these data points: {formatted_data}"
+    return PromptResult(
+        messages=[
+            Message(f"Please analyze these data points: {formatted_data}"),
+        ],
+        description="Data analysis prompt",
+    )
 
 
 if __name__ == "__main__":
