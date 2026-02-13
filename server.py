@@ -1,4 +1,7 @@
-from fastmcp import FastMCP
+import json
+from datetime import UTC, datetime
+
+from fastmcp import FastMCP, Context
 from fastmcp.prompts import Message, PromptResult
 from fastmcp.resources import ResourceContent, ResourceResult
 
@@ -26,6 +29,39 @@ def get_config() -> ResourceResult:
     """Provides the application configuration."""
     return ResourceResult([ResourceContent({"theme": "dark", "version": "1.0"})])
 
+
+@mcp.resource("resource://system-status")
+async def get_system_status(ctx: Context) -> ResourceResult:
+    """Provides system status information."""
+    return ResourceResult([ResourceContent({"status": "operational", "request_id": ctx.request_id})])
+
+
+@mcp.resource("resource://context")
+async def get_context(ctx: Context) -> ResourceResult:
+    """Returns all available context properties for the current request (request ID, client, session, transport, etc.)."""
+    payload = {
+        "request_timestamp": datetime.now(UTC).isoformat(),
+        "transport": ctx.transport,
+        "is_background_task": ctx.is_background_task,
+        "task_id": ctx.task_id,
+        "client_id": ctx.client_id,
+        "lifespan_context": ctx.lifespan_context,
+    }
+    if ctx.request_context is not None:
+        payload["request_id"] = ctx.request_id
+        try:
+            payload["session_id"] = ctx.session_id
+        except RuntimeError:
+            payload["session_id"] = None
+    else:
+        payload["request_id"] = None
+        payload["session_id"] = None
+    return ResourceResult([ResourceContent(payload)])
+
+@mcp.resource("resource://{name}/details")
+async def get_details(name: str, ctx: Context) -> ResourceResult:
+    """Get details for a specific name."""
+    return ResourceResult([ResourceContent({"name": name, "accessed_at": ctx.request_id})])
 
 # Resource Templates
 @mcp.resource("users://{user_id}/profile")
